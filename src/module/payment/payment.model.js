@@ -1,13 +1,13 @@
-const mongoos = require('mongoos');
+const mongoose = require('mongoose');
 
-const paymentSchema = new mongoos.Schema({
+const paymentSchema = new mongoose.Schema({
     userId:{
-        type:mongoos.Schema.Types.ObjectId,
+        type:mongoose.Schema.Types.ObjectId,
         ref:"User",
         required:true
     },
     productIds:[
-        {type:mongoos.Schema.Types.ObjectId,
+        {type:mongoose.Schema.Types.ObjectId,
             ref:"Product"
         }
     ],
@@ -21,4 +21,4 @@ const paymentSchema = new mongoos.Schema({
   paymentIntentId:{type:String}
 },{timeStamps:true});
 
-module.exports = mongoos.model("Payment", paymentSchema);
+module.exports = mongoose.model("Payment", paymentSchema);

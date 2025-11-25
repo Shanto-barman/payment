@@ -8,7 +8,7 @@ router.post('/create',checkUserToken, paymentController.createCheckout);
 //Stripe webhook must use row body
 router.post(
     '/webhook', 
-    express.row({type:'application/json'}),
+    express.raw({type:'application/json'}),
 paymentController.handleWebhook
 );
 

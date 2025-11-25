@@ -1,10 +1,13 @@
 const express = require('express')
 const router = express.Router()
-const paymentRouter = require('./src/module/payment/payment.route')
-const productRoucter =
+const paymentRouters = require('./src/module/payment/payment.route');
+const productRouters = require('./src/module/product/product.route');
+const userRouters = require('./src/module/user/user.route')
 
-router.use('/user', paymentRouter);
+router.use("/auth", userRouters);
+router.use('/payment', paymentRouters);
+router.use('/product', productRouters);
 
 
 
-module.exports = router;
+module.exports = router;     
