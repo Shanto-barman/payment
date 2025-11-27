@@ -1,4 +1,5 @@
 const User = require("./user.model");
+const Session = require('./session.model')
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const {
@@ -8,36 +9,144 @@ const {
 } = require("../../config/envConfig");
 const sendMail = require("../../utils/sendMail");
 
-exports.createUserService = async ({ name, email, password }) => {
-  const hashedPassword = await bcrypt.hash(password, 10);
-  const user = new User({ name, email, password: hashedPassword });
-  const savedUser = await user.save();
+const ms = require("ms");
+exports.registerUser = async (data) => {
+    const { name, email, password } = data;
 
-  await sendMail({
-    email: savedUser.email,
-    subject: "Welcome to Our Platform 🎉",
-    html: `<html>
-    <body>
-      <div style="max-width:500px;margin:auto;padding:20px;background:#f7f7f7;border-radius:10px;font-family:Arial">
-        <h2 style="color:#333">Welcome, ${savedUser.name} 🎉</h2>
-        <p style="color:#555;font-size:16px;line-height:1.6">
-          We are excited to have you with us. Your account has been created successfully.
-        </p>
-        <p style="color:#555;font-size:16px;line-height:1.6">
-          Feel free to explore our features and enjoy the experience.
-        </p>
-        <a href="#" style="display:inline-block;margin-top:20px;background:#4f46e5;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none">Go to Dashboard</a>
-        <p style="margin-top:20px;color:#777;font-size:14px;text-align:center">
-          If you need any help, just reply to this email.
-        </p>
-      </div>
-    </body>
-  </html>`,
-  });
+    if (!name || !email || !password) {
+        throw new Error("All fields are required");
+    }
 
-  const { password: _, ...userWithoutPass } = savedUser.toObject();
-  return userWithoutPass;
+    const userExists = await User.findOne({ email });
+    if (userExists) throw new Error("User already exists");
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const newUser = await User.create({
+        ...data,
+        password: hashedPassword
+    });
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpiry = Date.now() + ms(process.env.OTP_EXPIRE_TIME);
+
+    newUser.otp = otp;
+    newUser.otpExpiry = otpExpiry;
+
+    await newUser.save();
+
+    await sendMail({
+        email: newUser.email,
+        subject: "Your Verification OTP",
+        message: `Your OTP is: ${otp}`
+    });
+
+    // Generate JWT token (just added)
+    const token = jwt.sign(
+        { userId: newUser._id, role: newUser.role },
+        JWT_SECRET,
+        { expiresIn: ACCESS_TOKEN_EXPIRES_IN }
+    );
+
+    // Return everything as before + token
+    return {
+        ...newUser.toObject(),  // সব আগের fields
+        token                   // নতুন token
+    };
 };
+// const ms = require("ms");
+
+// exports.registerUser = async (data) => {
+//     const { name, email, password } = data;
+
+//     if (!name || !email || !password) {
+//         throw new Error("All fields are required");
+//     }
+
+//     const userExists = await User.findOne({ email });
+//     if (userExists) throw new Error("User already exists");
+
+//     const hashedPassword = await bcrypt.hash(password, 10);
+
+//     const newUser = await User.create({
+//         ...data,
+//         password: hashedPassword
+//     });
+
+//     const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+//     console.log("ENV:", process.env.OTP_EXPIRE_TIME);
+//     console.log("ms convert:", ms(process.env.OTP_EXPIRE_TIME));
+
+//     const otpExpiry = Date.now() + ms(process.env.OTP_EXPIRE_TIME);
+
+//     newUser.otp = otp;
+//     newUser.otpExpiry = otpExpiry;
+
+//     await newUser.save();
+
+//     await sendMail({
+//         email: newUser.email,
+//         subject: "Your Verification OTP",
+//         message: `Your OTP is: ${otp}`
+//     });
+
+//     return newUser;
+// };
+
+// exports.registerUser = async (data) => {
+//     const { name, email, password } = data;
+
+//     if (!name || !email || !password) {
+//         throw new Error("All fields are required");
+//     }
+
+//     const userExists = await User.findOne({ email });
+//     if (userExists) throw new Error("User already exists");
+
+//     const hashedPassword = await bcrypt.hash(password, 10);
+
+//     const newUser = await User.create({
+//         ...data,
+//         password: hashedPassword
+//     });
+
+//     // Generate OTP
+//     const otp = Math.floor(100000 + Math.random() * 900000).toString();
+//     const otpExpiry = Date.now() + ms(process.env.OTP_EXPIRE_TIME);
+
+//     newUser.otp = otp;
+//     newUser.otpExpiry = otpExpiry;
+
+//     await newUser.save();
+
+//     // Send OTP via email
+//     await sendMail({
+//         email: newUser.email,
+//         subject: "Your Verification OTP",
+//         message: `Your OTP is: ${otp}`
+//     });
+
+//     // Generate JWT token
+//     const token = jwt.sign(
+//         { userId: newUser._id, role: newUser.role },
+//         JWT_SECRET,
+//         { expiresIn: ACCESS_TOKEN_EXPIRES_IN }
+//     );
+
+//     // Return user + token
+//     return {
+//         user: {
+//             _id: newUser._id,
+//             name: newUser.name,
+//             email: newUser.email,
+//             role: newUser.role,
+//             isVerified: newUser.isVerified
+//         },
+//         token
+//     };
+// };
+
 
 exports.loginUserService = async ({ email, password }) => {
   const user = await User.findOne({ email });
@@ -61,6 +170,15 @@ exports.loginUserService = async ({ email, password }) => {
   await user.save();
 
   return { accessToken, refreshToken, user };
+};
+
+exports.logoutUser = async (userId) => {
+  
+    await Session.deleteMany({ userId });
+
+    await User.findByIdAndUpdate(userId, { isLoggedIn: false });
+
+    return true;
 };
 
 exports.forgetPassword = async (email) => {

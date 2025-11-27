@@ -1,6 +1,7 @@
 const {
-  createUserService,
+  registerUser,
   loginUserService,
+  logoutUser,
   getAllUsersService,
   getUserByIdService,
   getMeService,
@@ -10,21 +11,18 @@ const {
   resetPasswordService
 } = require('./user.service');
 
-exports.createUser = async (req, res) => {
+exports.register = async (req, res) => {
+    try {
+        const user = await registerUser(req.body);
 
-  const data=req.body;
-
-
-  try {
-    const user = await createUserService(data);
-
-    console.log("Controller value",user)
-
-    res.status(201).json(user);
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({ message: err.message });
-  }
+        return res.status(201).json({
+            success: true,
+            message: "User registered successfully. OTP sent.",
+            user
+        });
+    } catch (err) {
+        return res.status(400).json({ success: false, message: err.message });
+    }
 };
 
 exports.loginUser = async (req, res) => {
@@ -39,6 +37,25 @@ exports.loginUser = async (req, res) => {
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
+};
+
+exports.logout = async (req, res) => {
+    try {
+        const userId = req.id;  // middleware থেকে আসা user id
+        console.log("UserId:", userId);
+
+        await logoutUser(userId);
+
+        return res.status(200).json({
+            success: true,
+            message: "User logout successful",
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
 };
 
 exports.getUsers = async (req, res) => {
@@ -92,17 +109,34 @@ exports.forgetPassController=async(req,res)=>{
   }
 }
 
-
-exports.verifyOTPController=async(req,res)=>{
+exports.verifyOTPController = async (req, res) => {
   try {
-    const {email, otp}=req.body;
-  await verifyOtpService(email, otp);
-  res.status(200).json({message:"OTP Verified successfully"})
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({
+        success: false,
+        message: "Email and OTP are required",
+      });
+    }
+
+    // OTP verification করা হবে, কিন্তু user object return হবে না
+    await verifyOtpService(email, otp);
+
+    return res.status(200).json({
+      success: true,
+      message: "OTP Verified successfully",
+    });
   } catch (error) {
-    console.log(error)
-    res.status(403).json({ message: error.message });
+    console.log("Verify OTP Error:", error);
+    return res.status(403).json({
+      success: false,
+      message: error.message,
+    });
   }
-}
+};
+
+
 
 
 

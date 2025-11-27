@@ -11,7 +11,7 @@ const checkUserToken = async (req, res, next) => {
   const token = authHeader.split(' ')[1];
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     console.log("Decoded JWT:", decoded);
      req.user = {
       id: decoded.userId,  // JWT-তে থাকা userId
