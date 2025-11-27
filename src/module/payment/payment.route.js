@@ -3,7 +3,7 @@ const router = express.Router();
 const paymentController = require('./payment.controller');
 const { checkUserToken } = require('../../middleware/authMiddleware');
 
-router.post('/create',checkUserToken, paymentController.createCheckout);
+router.post('/checkout',checkUserToken, paymentController.createCheckout);
 
 //Stripe webhook must use row body
 router.post(
@@ -13,3 +13,5 @@ paymentController.handleWebhook
 );
 
 module.exports = router;
+
+

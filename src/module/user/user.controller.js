@@ -61,15 +61,15 @@ exports.showUser = async (req, res) => {
 };
 
 exports.getMe = async (req, res) => {
-  const {id,email,role}=req.user;
   try {
-    const user = await getMeService(id);
+    const user = await getMeService(req.user.id); // only id
     if (!user) return res.status(404).json({ message: 'User not found' });
     res.status(200).json(user);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
+
 
 exports.refreshTokenUser = async (req, res) => {
   try {

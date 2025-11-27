@@ -1,25 +1,29 @@
 const jwt = require('jsonwebtoken');
 const { JWT_SECRET } = require('../config/envConfig');
 
+const checkUserToken = async (req, res, next) => {
+  const authHeader = req.headers['authorization'] || req.headers['Authorization'];
 
-const checkUserToken = async(req, res, next)=>{
-    const authHeader = req.headers['authrization'] || req.headers['Authorization'];
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ message: 'Access token is missing or invalid format' });
+  }
 
-    if(!authHeader || !authHeader.startsWith('Bearer')){
-        return res.status(401).json({message:'Access token is missing or invalid format'})
-    }
+  const token = authHeader.split(' ')[1];
 
-    const token = authHeader.split(' ')[1];
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    console.log("Decoded JWT:", decoded);
+     req.user = {
+      id: decoded.userId,  // JWT-তে থাকা userId
+      email: decoded.email,
+      role: decoded.role
+    };
+    next();
+  } catch (error) {
+    return res.status(403).json({ message: 'Invalid or expired token' });
+  }
+};
 
-    try{
-        const decoded = jwt.verify(token, JWT_SECRET);
-
-        req.user = decoded;
-        next();
-    }catch(error){
-        return res.status(403).json({message:'Invalid or expird token'})
-    }
-}
 
 const checkAdminToken = async (req, res, next) => {
    const authHeader = req.headers['authorization'] || req.headers['Authorization'];
@@ -43,4 +47,5 @@ const checkAdminToken = async (req, res, next) => {
   }
 }; 
 
-module.exports = {checkUserToken, checkAdminToken}
+
+module.exports = { checkUserToken, checkAdminToken };

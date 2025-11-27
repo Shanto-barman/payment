@@ -1,13 +1,15 @@
-const { error } = require('console');
-const { createCheckoutSession, updatePaymentStatus, verifyWebhookSignature } = require('./payment.service');
-
+const {
+  createCheckoutSession,
+  updatePaymentStatus,
+  verifyWebhookSignature,
+} = require("./payment.service");
 
 exports.createCheckout = async (req, res) => {
   try {
     const { quantity, productIds } = req.body;
 
     const url = await createCheckoutSession({
-      userId: req.user.userId,
+      userId: req.user.id,   // <-- fixed
       quantity,
       productIds,
     });
@@ -18,6 +20,8 @@ exports.createCheckout = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
+
 
 exports.handleWebhook = async (req, res) => {
 
@@ -42,3 +46,4 @@ exports.handleWebhook = async (req, res) => {
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 };
+
