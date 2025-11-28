@@ -41,111 +41,18 @@ exports.registerUser = async (data) => {
         message: `Your OTP is: ${otp}`
     });
 
-    // Generate JWT token (just added)
+ 
     const token = jwt.sign(
         { userId: newUser._id, role: newUser.role },
         JWT_SECRET,
         { expiresIn: ACCESS_TOKEN_EXPIRES_IN }
     );
 
-    // Return everything as before + token
     return {
-        ...newUser.toObject(),  // সব আগের fields
-        token                   // নতুন token
+        ...newUser.toObject(),  
+        token                   
     };
 };
-// const ms = require("ms");
-
-// exports.registerUser = async (data) => {
-//     const { name, email, password } = data;
-
-//     if (!name || !email || !password) {
-//         throw new Error("All fields are required");
-//     }
-
-//     const userExists = await User.findOne({ email });
-//     if (userExists) throw new Error("User already exists");
-
-//     const hashedPassword = await bcrypt.hash(password, 10);
-
-//     const newUser = await User.create({
-//         ...data,
-//         password: hashedPassword
-//     });
-
-//     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
-//     console.log("ENV:", process.env.OTP_EXPIRE_TIME);
-//     console.log("ms convert:", ms(process.env.OTP_EXPIRE_TIME));
-
-//     const otpExpiry = Date.now() + ms(process.env.OTP_EXPIRE_TIME);
-
-//     newUser.otp = otp;
-//     newUser.otpExpiry = otpExpiry;
-
-//     await newUser.save();
-
-//     await sendMail({
-//         email: newUser.email,
-//         subject: "Your Verification OTP",
-//         message: `Your OTP is: ${otp}`
-//     });
-
-//     return newUser;
-// };
-
-// exports.registerUser = async (data) => {
-//     const { name, email, password } = data;
-
-//     if (!name || !email || !password) {
-//         throw new Error("All fields are required");
-//     }
-
-//     const userExists = await User.findOne({ email });
-//     if (userExists) throw new Error("User already exists");
-
-//     const hashedPassword = await bcrypt.hash(password, 10);
-
-//     const newUser = await User.create({
-//         ...data,
-//         password: hashedPassword
-//     });
-
-//     // Generate OTP
-//     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-//     const otpExpiry = Date.now() + ms(process.env.OTP_EXPIRE_TIME);
-
-//     newUser.otp = otp;
-//     newUser.otpExpiry = otpExpiry;
-
-//     await newUser.save();
-
-//     // Send OTP via email
-//     await sendMail({
-//         email: newUser.email,
-//         subject: "Your Verification OTP",
-//         message: `Your OTP is: ${otp}`
-//     });
-
-//     // Generate JWT token
-//     const token = jwt.sign(
-//         { userId: newUser._id, role: newUser.role },
-//         JWT_SECRET,
-//         { expiresIn: ACCESS_TOKEN_EXPIRES_IN }
-//     );
-
-//     // Return user + token
-//     return {
-//         user: {
-//             _id: newUser._id,
-//             name: newUser.name,
-//             email: newUser.email,
-//             role: newUser.role,
-//             isVerified: newUser.isVerified
-//         },
-//         token
-//     };
-// };
 
 
 exports.loginUserService = async ({ email, password }) => {

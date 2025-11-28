@@ -41,7 +41,7 @@ exports.loginUser = async (req, res) => {
 
 exports.logout = async (req, res) => {
     try {
-        const userId = req.id;  // middleware থেকে আসা user id
+        const userId = req.id; 
         console.log("UserId:", userId);
 
         await logoutUser(userId);
@@ -98,16 +98,17 @@ exports.refreshTokenUser = async (req, res) => {
 };
 
 
-exports.forgetPassController=async(req,res)=>{
+exports.forgetPassController = async (req, res) => {
   try {
-    const {email}=req.body;
-  await forgetPassword(email);
-  res.status(200).json({message:"OTP sent successfully"})
+    const { email } = req.body;
+    await forgetPassword(email);
+    res.status(200).json({ message: "OTP sent successfully" });
+
   } catch (error) {
-    console.log(error)
+    console.log(error);
     res.status(403).json({ message: error.message });
   }
-}
+};
 
 exports.verifyOTPController = async (req, res) => {
   try {
@@ -120,7 +121,6 @@ exports.verifyOTPController = async (req, res) => {
       });
     }
 
-    // OTP verification করা হবে, কিন্তু user object return হবে না
     await verifyOtpService(email, otp);
 
     return res.status(200).json({
@@ -135,10 +135,6 @@ exports.verifyOTPController = async (req, res) => {
     });
   }
 };
-
-
-
-
 
 
 exports.resetPasswordController=async(req, res)=>{
