@@ -2,6 +2,7 @@ const User = require("./user.model");
 const Session = require('./session.model')
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const cloudinary = require ("../utils/cloudinary.js");
 const {
   JWT_SECRET,
   REFRESH_TOKEN_EXPIRES_IN,
@@ -79,7 +80,7 @@ exports.loginUserService = async ({ email, password }) => {
   return { accessToken, refreshToken, user };
 };
 
-exports.logoutUser = async (userId) => {
+exports.logoutUserService = async (userId) => {
   
     await Session.deleteMany({ userId });
 
@@ -209,4 +210,58 @@ exports.refreshTokenService = async (refreshToken) => {
   );
 
   return newAccessToken;
+};
+
+
+
+exports.updateUserService = async (userIdToUpdate, loggedInUser, body, file) => {
+    const { name, address, city, country, zipCode, phoneNo, role } = body;
+
+    // Permission check
+    if (loggedInUser._id.toString() !== userIdToUpdate && loggedInUser.role !== "admin") {
+        throw new Error("You are not allowed to update this profile");
+    }
+
+    let user = await User.findById(userIdToUpdate);
+    if (!user) {
+        throw new Error("User not found");
+    }
+
+    let profilePicUrl = user.profilePic;
+    let profilePicPublicId = user.profilePicPublicId;
+
+    // If new file uploaded
+    if (file) {
+        if (profilePicPublicId) {
+            await cloudinary.uploader.destroy(profilePicPublicId);
+        }
+
+        const uploadResult = await new Promise((resolve, reject) => {
+            const stream = cloudinary.uploader.upload_stream(
+                { folder: "profile" },
+                (error, result) => {
+                    if (error) reject(error);
+                    else resolve(result);
+                }
+            );
+            stream.end(file.buffer);
+        });
+
+        profilePicUrl = uploadResult.secure_url;
+        profilePicPublicId = uploadResult.public_id;
+    }
+
+    // Update user fields
+    user.name = name || user.name;
+    user.address = address || user.address;
+    user.city = city || user.city;
+    user.country =country || user.country;
+    user.zipCode = zipCode || user.zipCode;
+    user.phoneNo = phoneNo || user.phoneNo;
+    user.role = role;
+    user.profilePic = profilePicUrl;
+    user.profilePicPublicId = profilePicPublicId;
+
+    const updatedUser = await user.save();
+    return updatedUser;
 };

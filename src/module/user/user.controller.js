@@ -1,14 +1,15 @@
 const {
   registerUser,
   loginUserService,
-  logoutUser,
+  logoutUserService,
   getAllUsersService,
   getUserByIdService,
   getMeService,
   refreshTokenService,
   forgetPassword,
   verifyOtpService,
-  resetPasswordService
+  resetPasswordService,
+  updateUserService,
 } = require('./user.service');
 
 exports.register = async (req, res) => {
@@ -39,12 +40,12 @@ exports.loginUser = async (req, res) => {
   }
 };
 
-exports.logout = async (req, res) => {
+exports.logoutUser = async (req, res) => {
     try {
         const userId = req.id; 
         console.log("UserId:", userId);
 
-        await logoutUser(userId);
+        await logoutUserService(userId);
 
         return res.status(200).json({
             success: true,
@@ -147,3 +148,30 @@ exports.resetPasswordController=async(req, res)=>{
     res.status(403).json({ message: error.message });
   }
 }
+
+
+export const updateUser = async (req, res) => {
+    try {
+        const userIdToUpdate = req.params.id;
+        const loggedInUser = req.user;
+
+        const updatedUser = await updateUserService(
+            userIdToUpdate,
+            loggedInUser,
+            req.body,
+            req.file
+        );
+
+        return res.status(200).json({
+            success: true,
+            message: "Profile Updated Successfully",
+            user: updatedUser,
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};
