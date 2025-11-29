@@ -2,7 +2,7 @@ const User = require("./user.model");
 const Session = require('./session.model')
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const cloudinary = require ("../utils/cloudinary.js");
+const cloudinary = require ("../../utils/cloudinary");
 const {
   JWT_SECRET,
   REFRESH_TOKEN_EXPIRES_IN,
@@ -182,17 +182,9 @@ exports.resetPasswordService = async (email, newPassword) => {
 };
 
 
-
-exports.getAllUsersService = async () => {
-  return await User.find();
-};
-
-exports.getUserByIdService = async (id) => {
-  return await User.findById(id).select("-password");
-};
-
-exports.getMeService = async (userId) => {
-  return await User.findById(userId).select("-password");
+exports.getAllUserService = async () => {
+  const users = await User.find();
+  return users;
 };
 
 exports.refreshTokenService = async (refreshToken) => {

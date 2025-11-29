@@ -2,15 +2,13 @@ const {
   registerUser,
   loginUserService,
   logoutUserService,
-  getAllUsersService,
-  getUserByIdService,
-  getMeService,
+  getAllUserService,
   refreshTokenService,
   forgetPassword,
   verifyOtpService,
   resetPasswordService,
   updateUserService,
-} = require('./user.service');
+} = require('./user.service.js');
 
 exports.register = async (req, res) => {
     try {
@@ -59,32 +57,20 @@ exports.logoutUser = async (req, res) => {
     }
 };
 
-exports.getUsers = async (req, res) => {
-  try {
-    const users = await getAllUsersService();
-    res.status(200).json(users);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-};
 
-exports.showUser = async (req, res) => {
+exports.getAllUserController = async (req, res) => {
   try {
-    const user = await getUserByIdService(req.params.id);
-    if (!user) return res.status(404).json({ message: 'User not found' });
-    res.status(200).json(user);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-};
+    const users = await getAllUserService();
 
-exports.getMe = async (req, res) => {
-  try {
-    const user = await getMeService(req.user.id); // only id
-    if (!user) return res.status(404).json({ message: 'User not found' });
-    res.status(200).json(user);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+    return res.status(200).json({
+      success: true,
+      users,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
 
@@ -150,7 +136,7 @@ exports.resetPasswordController=async(req, res)=>{
 }
 
 
-export const updateUser = async (req, res) => {
+exports.updateUserController = async (req, res) => {
     try {
         const userIdToUpdate = req.params.id;
         const loggedInUser = req.user;
